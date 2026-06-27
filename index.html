@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clima Parcela - Germán Olivares D.</title>
+    <title>Desarrollado por- Germán Olivares M.</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #0b1120;
+            --secondary: #1e293b;
+            --accent: #0ea5e9;
+            --accent-warm: #f59e0b;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --card-bg: #1e293b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--primary);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            width: 100vw;
+            max-width: 100%;
+        }
+
+        /* Header */
+        .header {
+            background: var(--secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 0.75rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            flex-wrap: nowrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .logo i {
+            color: var(--accent);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .location-badge {
+            background: var(--primary);
+            border: 1px solid var(--border);
+            padding: 0.3rem 0.6rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Controles */
+        .controls-section {
+            max-width: 1200px;
+            margin: 0.75rem auto;
+            padding: 0 0.75rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .date-control {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--secondary);
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            flex: 1;
+            min-width: 0;
+        }
+
+        .date-control label {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .date-control input[type="date"] {
+            background: var(--primary);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.35rem 0.3rem;
+            border-radius: 0.4rem;
+            font-family: inherit;
+            font-size: 0.8rem;
+            flex: 1;
+            min-width: 0;
+            max-width: 130px;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.7rem;
+            border-radius: 0.4rem;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.2s;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn:hover {
+            background: #0284c7;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        /* Layout principal */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 0.75rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .main-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1.3fr 0.7fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.75rem;
+        }
+
+        .card-title i {
+            color: var(--accent);
+            font-size: 0.85rem;
+        }
+
+        /* Mapa */
+        #map {
+            height: 280px;
+            width: 100%;
+            border-radius: 0.5rem;
+            z-index: 1;
+        }
+
+        @media (min-width: 768px) {
+            #map {
+                height: 400px;
+            }
+        }
+
+        /* Grid de métricas - 3 columnas fijas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        .metric-card {
+            background: var(--primary);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 0.6rem 0.3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        .metric-card.alert::before { background: var(--danger); }
+        .metric-card.warning::before { background: var(--accent-warm); }
+        .metric-card.safe::before { background: var(--success); }
+
+        .metric-icon {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .metric-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        .metric-label {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            line-height: 1.2;
+        }
+
+        .metric-sub {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Min/Max en una línea */
+        .minmax-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+            margin-top: 0.15rem;
+            font-size: 0.65rem;
+            white-space: nowrap;
+        }
+
+        .minmax-line .min-val {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .minmax-line .max-val {
+            color: var(--accent-warm);
+            font-weight: 600;
+        }
+
+        .minmax-line .sep {
+            color: var(--text-muted);
+            font-size: 0.55rem;
+        }
+
+        /* Badge de estado */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.15rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 1rem;
+            font-size: 0.55rem;
+            font-weight: 600;
+            margin-top: 0.2rem;
+        }
+
+        .status-badge.danger {
+            background: rgba(239,68,68,0.2);
+            color: var(--danger);
+        }
+
+        .status-badge.warning {
+            background: rgba(245,158,11,0.2);
+            color: var(--accent-warm);
+        }
+
+        .status-badge.safe {
+            background: rgba(34,197,94,0.2);
+            color: var(--success);
+        }
+
+        /* Alerta de helada */
+        .frost-alert {
+            background: linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(99,102,241,0.1) 100%);
+            border: 1px solid var(--danger);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            animation: pulse 2s infinite;
+            width: 100%;
+        }
+
+        .frost-alert.active {
+            display: flex;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+        }
+
+        .frost-alert-icon {
+            font-size: 1.5rem;
+            color: var(--danger);
+            flex-shrink: 0;
+        }
+
+        .frost-alert-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .frost-alert-title {
+            font-weight: 700;
+            color: var(--danger);
+            font-size: 0.9rem;
+        }
+
+        .frost-alert-desc {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-top: 0.15rem;
+            line-height: 1.3;
+        }
+
+        /* Pronóstico horario */
+        .hourly-forecast {
+            margin-top: 0.75rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+        }
+
+        .hourly-container {
+            display: flex;
+            gap: 0.4rem;
+            min-width: max-content;
+            padding-bottom: 0.3rem;
+        }
+
+        .hour-item {
+            background: var(--primary);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.4rem;
+            min-width: 65px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .hour-time {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .hour-temp {
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .hour-icon {
+            font-size: 1rem;
+            margin: 0.15rem 0;
+        }
+
+        .hour-precip {
+            font-size: 0.6rem;
+            color: var(--accent);
+        }
+
+        .hour-wind {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        .hour-frost {
+            color: var(--danger);
+            font-size: 0.55rem;
+            margin-top: 0.1rem;
+            font-weight: 700;
+        }
+
+        /* Gráfico */
+        .chart-container {
+            position: relative;
+            height: 200px;
+            margin-top: 0.75rem;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .info-footer {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.75rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .info-footer .main-text {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            line-height: 1.5;
+        }
+
+        .info-footer .dev-text {
+            color: var(--text-muted);
+            font-size: 0.55rem;
+            margin-top: 0.2rem;
+            opacity: 0.6;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        /* Leaflet custom */
+        .leaflet-popup-content-wrapper {
+            background: var(--card-bg);
+            color: var(--text);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .leaflet-popup-tip {
+            background: var(--card-bg);
+        }
+
+        .leaflet-container a {
+            color: var(--accent);
+        }
+
+        /* Daily forecast items */
+        .daily-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--primary);
+            padding: 0.5rem 0.6rem;
+            border-radius: 0.4rem;
+            border: 1px solid var(--border);
+            margin-bottom: 0.4rem;
+        }
+
+        .daily-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .daily-day {
+            min-width: 45px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .daily-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .daily-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .daily-temps {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.8rem;
+        }
+
+        .daily-temps .max-t {
+            font-weight: 700;
+        }
+
+        .daily-temps .min-t {
+            color: var(--text-muted);
+        }
+
+        .daily-details {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        .daily-frost {
+            color: var(--danger);
+            font-size: 0.65rem;
+            font-weight: 700;
+            margin-left: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-snowflake"></i>
+                <span>Portal de Heladas y Clima para Germán Olivares Díaz</span>
+            </div>
+            <div class="location-badge">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>La Higuera, La Ligua, Valparaíso</span>
+            </div>
+        </div>
+    </header>
+
+    <section class="controls-section">
+        <div class="date-control">
+            <label><i class="far fa-calendar-alt"></i></label>
+            <input type="date" id="datePicker">
+            <button class="btn" onclick="loadWeatherData()">
+                <i class="fas fa-sync-alt"></i> Actualizar
+            </button>
+        </div>
+        <button class="btn btn-secondary" onclick="goToToday()">
+            <i class="fas fa-calendar-day"></i> Hoy
+        </button>
+        <button class="btn btn-danger" onclick="toggleFrostLayer()">
+            <i class="fas fa-eye"></i> Heladas
+        </button>
+    </section>
+
+    <main class="main-container">
+        <div class="left-column">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-map-marked-alt"></i>
+                    Mapa de Zona de Monitoreo
+                </div>
+                <div id="map"></div>
+                <div class="frost-alert" id="frostAlert">
+                    <div class="frost-alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="frost-alert-text">
+                        <div class="frost-alert-title">¡ALERTA DE HELADA!</div>
+                        <div class="frost-alert-desc" id="frostAlertDesc"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 0.75rem;">
+                <div class="card-title">
+                    <i class="fas fa-chart-line"></i>
+                    Evolución Temperatura 24h
+                </div>
+                <div class="chart-container">
+                    <canvas id="tempChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Condiciones Actuales
+                </div>
+                <div class="metrics-grid" id="metricsGrid">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 0.75rem;">
+                <div class="card-title">
+                    <i class="fas fa-clock"></i>
+                    Pronóstico por Horas
+                </div>
+                <div class="hourly-forecast">
+                    <div class="hourly-container" id="hourlyContainer">
+                        <div class="loading"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 0.75rem;">
+                <div class="card-title">
+                    <i class="fas fa-calendar-week"></i>
+                    Pronóstico 7 Días
+                </div>
+                <div id="dailyForecast">
+                    <div class="loading"><div class="spinner"></div> Cargando...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="info-footer">
+        <p class="main-text"><i class="fas fa-info-circle"></i> Open-Meteo API | -32.5156, -71.1860 | La Higuera, La Ligua, Valparaíso</p>
+        <p class="dev-text">Creado y Desarrollado por Germán Olivares Moreno</p>
+        <p class="main-text">Actualizado: <span id="lastUpdate">--</span></p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        const LAT = -32.51557117454404;
+        const LON = -71.18596165275103;
+        const LOCATION_NAME = "La Higuera, La Ligua, Valparaíso";
+
+        let map, tempChart, frostLayerActive = false, currentWeatherData = null, dailyMinMax = {};
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            initDatePicker();
+            loadWeatherData();
+        });
+
+        function initMap() {
+            map = L.map('map').setView([LAT, LON], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 19
+            }).addTo(map);
+
+            L.marker([LAT, LON]).addTo(map).bindPopup(
+                `<div style="text-align:center;font-size:0.85rem;"><strong>📍 Zona de Monitoreo</strong><br><span style="color:#94a3b8">${LOCATION_NAME}</span><br>${LAT.toFixed(4)}, ${LON.toFixed(4)}</div>`
+            ).openPopup();
+
+            L.circle([LAT, LON], { color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.1, radius: 5000, weight: 2, dashArray: '5,10' }).addTo(map);
+            L.circle([LAT, LON], { color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.05, radius: 10000, weight: 1, dashArray: '3,7' }).addTo(map);
+        }
+
+        function initDatePicker() {
+            document.getElementById('datePicker').value = new Date().toISOString().split('T')[0];
+        }
+
+        function goToToday() {
+            document.getElementById('datePicker').value = new Date().toISOString().split('T')[0];
+            loadWeatherData();
+        }
+
+        async function loadWeatherData() {
+            showLoading();
+            const selectedDate = document.getElementById('datePicker').value;
+            const startDate = new Date(selectedDate);
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 7);
+
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max&timezone=America/Santiago&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+                currentWeatherData = data;
+
+                calculateDailyMinMax(data.hourly, selectedDate);
+                updateMetrics(data.current);
+                updateHourlyForecast(data.hourly, selectedDate);
+                updateDailyForecast(data.daily);
+                updateChart(data.hourly, selectedDate);
+                checkFrostAlert(data.hourly, selectedDate);
+
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleString('es-CL');
+            } catch (error) {
+                console.error(error);
+                showError('Error al cargar datos. Intente nuevamente.');
+            }
+        }
+
+        function calculateDailyMinMax(hourly, selectedDate) {
+            const selected = new Date(selectedDate + 'T00:00:00');
+            const nextDay = new Date(selected);
+            nextDay.setDate(nextDay.getDate() + 1);
+
+            let minTemp = 100, maxTemp = -100;
+            for (let i = 0; i < hourly.time.length; i++) {
+                const hourDate = new Date(hourly.time[i]);
+                if (hourDate >= selected && hourDate < nextDay) {
+                    const temp = hourly.temperature_2m[i];
+                    if (temp < minTemp) minTemp = temp;
+                    if (temp > maxTemp) maxTemp = temp;
+                }
+            }
+            dailyMinMax = { min: minTemp !== 100 ? minTemp : null, max: maxTemp !== -100 ? maxTemp : null };
+        }
+
+        function showLoading() {
+            document.getElementById('metricsGrid').innerHTML = '<div class="loading" style="grid-column:1/-1"><div class="spinner"></div></div>';
+            document.getElementById('hourlyContainer').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+        }
+
+        function showError(msg) {
+            document.getElementById('metricsGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--danger);padding:1rem;font-size:0.8rem"><i class="fas fa-exclamation-circle"></i> ${msg}</div>`;
+        }
+
+        function updateMetrics(current) {
+            const temp = current.temperature_2m;
+            const humidity = current.relative_humidity_2m;
+            const wind = current.wind_speed_10m;
+            const gusts = current.wind_gusts_10m || wind;
+            const precip = current.precipitation;
+            const feelsLike = current.apparent_temperature;
+
+            const dayMin = dailyMinMax.min !== null ? dailyMinMax.min : temp;
+            const dayMax = dailyMinMax.max !== null ? dailyMinMax.max : temp;
+
+            let tempClass = 'safe', tempBadge = '<span class="status-badge safe">OK</span>';
+            if (temp <= 0) { tempClass = 'alert'; tempBadge = '<span class="status-badge danger">HELADA</span>'; }
+            else if (temp <= 5) { tempClass = 'warning'; tempBadge = '<span class="status-badge warning">Frío</span>'; }
+
+            const windClass = wind > 30 ? 'alert' : wind > 15 ? 'warning' : 'safe';
+            const precipClass = precip > 5 ? 'warning' : 'safe';
+
+            document.getElementById('metricsGrid').innerHTML = `
+                <div class="metric-card ${tempClass}">
+                    <div class="metric-icon">🌡️</div>
+                    <div class="metric-value">${temp.toFixed(1)}°</div>
+                    <div class="minmax-line">
+                        <span class="min-val">↓${dayMin.toFixed(1)}°</span>
+                        <span class="sep">|</span>
+                        <span class="max-val">↑${dayMax.toFixed(1)}°</span>
+                    </div>
+                    <div class="metric-label">Temp</div>
+                    <div class="metric-sub">Sens: ${feelsLike.toFixed(1)}°</div>
+                    ${tempBadge}
+                </div>
+
+                <div class="metric-card ${windClass}">
+                    <div class="metric-icon">💧</div>
+                    <div class="metric-value">${humidity}%</div>
+                    <div class="metric-label">Humedad</div>
+                    <div class="metric-sub">Relativa</div>
+                </div>
+
+                <div class="metric-card ${windClass}">
+                    <div class="metric-icon">💨</div>
+                    <div class="metric-value">${wind.toFixed(0)}</div>
+                    <div class="metric-label">Viento km/h</div>
+                    <div class="metric-sub">Ráf: ${gusts.toFixed(0)}</div>
+                </div>
+
+                <div class="metric-card ${precipClass}">
+                    <div class="metric-icon">🌧️</div>
+                    <div class="metric-value">${precip.toFixed(1)}</div>
+                    <div class="metric-label">Precip mm</div>
+                    <div class="metric-sub">Última h</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">☁️</div>
+                    <div class="metric-value">${current.cloud_cover}%</div>
+                    <div class="metric-label">Nubes</div>
+                    <div class="metric-sub">${getWeatherDesc(current.weather_code)}</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon">🧭</div>
+                    <div class="metric-value">${getWindDir(current.wind_direction_10m)}</div>
+                    <div class="metric-label">Dir Viento</div>
+                    <div class="metric-sub">${current.wind_direction_10m}°</div>
+                </div>
+            `;
+        }
+
+        function updateHourlyForecast(hourly, selectedDate) {
+            const container = document.getElementById('hourlyContainer');
+            container.innerHTML = '';
+
+            const selected = new Date(selectedDate + 'T00:00:00');
+            const nextDay = new Date(selected);
+            nextDay.setDate(nextDay.getDate() + 1);
+
+            for (let i = 0; i < hourly.time.length; i++) {
+                const hourDate = new Date(hourly.time[i]);
+                if (hourDate >= selected && hourDate < nextDay) {
+                    const temp = hourly.temperature_2m[i];
+                    const precipProb = hourly.precipitation_probability[i];
+                    const wind = hourly.wind_speed_10m[i];
+                    const code = hourly.weather_code[i];
+                    const isFrost = temp <= 0;
+                    const isCold = temp <= 5;
+
+                    const div = document.createElement('div');
+                    div.className = 'hour-item';
+                    if (isFrost) div.style.borderColor = 'var(--danger)';
+                    else if (isCold) div.style.borderColor = 'var(--accent-warm)';
+
+                    div.innerHTML = `
+                        <div class="hour-time">${hourDate.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'})}</div>
+                        <div class="hour-icon">${getWeatherIcon(code)}</div>
+                        <div class="hour-temp" style="color:${isFrost?'var(--danger)':isCold?'var(--accent-warm)':'var(--text)'}">${temp.toFixed(1)}°</div>
+                        <div class="hour-precip"><i class="fas fa-tint"></i> ${precipProb}%</div>
+                        <div class="hour-wind"><i class="fas fa-wind"></i> ${wind.toFixed(0)}km/h</div>
+                        ${isFrost ? '<div class="hour-frost">❄️ HELADA</div>' : ''}
+                    `;
+                    container.appendChild(div);
+                }
+            }
+        }
+
+        function updateDailyForecast(daily) {
+            const container = document.getElementById('dailyForecast');
+            let html = '';
+
+            for (let i = 0; i < daily.time.length && i < 7; i++) {
+                const date = new Date(daily.time[i]);
+                const dayName = i === 0 ? 'Hoy' : date.toLocaleDateString('es-CL', {weekday:'short', day:'numeric'});
+                const maxTemp = daily.temperature_2m_max[i];
+                const minTemp = daily.temperature_2m_min[i];
+                const precipProb = daily.precipitation_probability_max[i];
+                const code = daily.weather_code[i];
+                const wind = daily.wind_speed_10m_max[i];
+                const isFrost = minTemp <= 0;
+
+                html += `
+                    <div class="daily-item" style="border-color:${isFrost?'var(--danger)':'var(--border)'}">
+                        <div class="daily-day">${dayName}</div>
+                        <div class="daily-icon">${getWeatherIcon(code)}</div>
+                        <div class="daily-info">
+                            <div class="daily-temps">
+                                <span class="max-t">${maxTemp.toFixed(0)}°</span>
+                                <span class="min-t">/ ${minTemp.toFixed(0)}°</span>
+                                ${isFrost ? '<span class="daily-frost">❄️ HELADA</span>' : ''}
+                            </div>
+                            <div class="daily-details">
+                                <i class="fas fa-tint"></i> ${precipProb}% · <i class="fas fa-wind"></i> ${wind.toFixed(0)}km/h
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function updateChart(hourly, selectedDate) {
+            const ctx = document.getElementById('tempChart').getContext('2d');
+            if (tempChart) tempChart.destroy();
+
+            const selected = new Date(selectedDate + 'T00:00:00');
+            const nextDay = new Date(selected);
+            nextDay.setDate(nextDay.getDate() + 1);
+
+            const labels = [], temps = [], humidities = [], frostLine = [];
+
+            for (let i = 0; i < hourly.time.length; i++) {
+                const hourDate = new Date(hourly.time[i]);
+                if (hourDate >= selected && hourDate < nextDay) {
+                    labels.push(hourDate.toLocaleTimeString('es-CL', {hour:'2-digit'}));
+                    temps.push(hourly.temperature_2m[i]);
+                    humidities.push(hourly.relative_humidity_2m[i]);
+                    frostLine.push(0);
+                }
+            }
+
+            tempChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Temp °C',
+                            data: temps,
+                            borderColor: '#0ea5e9',
+                            backgroundColor: 'rgba(14,165,233,0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 2,
+                            pointHoverRadius: 5
+                        },
+                        {
+                            label: 'Hum %',
+                            data: humidities,
+                            borderColor: '#22c55e',
+                            backgroundColor: 'transparent',
+                            borderDash: [5,5],
+                            tension: 0.4,
+                            pointRadius: 1,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: '0°C',
+                            data: frostLine,
+                            borderColor: '#ef4444',
+                            borderWidth: 1,
+                            borderDash: [2,2],
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 12 } },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f1f5f9',
+                            bodyColor: '#94a3b8',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            titleFont: { size: 11 },
+                            bodyFont: { size: 10 }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: '#334155', drawBorder: false },
+                            ticks: { color: '#94a3b8', font: { size: 9 }, maxRotation: 45 }
+                        },
+                        y: {
+                            grid: { color: '#334155', drawBorder: false },
+                            ticks: { color: '#94a3b8', font: { size: 9 } },
+                            title: { display: true, text: '°C', color: '#94a3b8', font: { size: 9 } }
+                        },
+                        y1: {
+                            position: 'right',
+                            grid: { display: false },
+                            ticks: { color: '#22c55e', font: { size: 9 } },
+                            min: 0, max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        function checkFrostAlert(hourly, selectedDate) {
+            const selected = new Date(selectedDate + 'T00:00:00');
+            const nextDay = new Date(selected);
+            nextDay.setDate(nextDay.getDate() + 1);
+
+            let minTemp = 100, frostHours = [];
+
+            for (let i = 0; i < hourly.time.length; i++) {
+                const hourDate = new Date(hourly.time[i]);
+                if (hourDate >= selected && hourDate < nextDay) {
+                    const temp = hourly.temperature_2m[i];
+                    if (temp < minTemp) minTemp = temp;
+                    if (temp <= 0) frostHours.push(hourDate.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'}));
+                }
+            }
+
+            const alert = document.getElementById('frostAlert');
+            const desc = document.getElementById('frostAlertDesc');
+
+            alert.style.borderColor = '';
+            alert.querySelector('.frost-alert-title').textContent = '¡ALERTA DE HELADA!';
+            alert.querySelector('.frost-alert-title').style.color = '';
+            alert.querySelector('.frost-alert-icon').style.color = '';
+
+            if (minTemp <= 0) {
+                alert.classList.add('active');
+                desc.textContent = frostHours.length > 0 
+                    ? `Mín: ${minTemp.toFixed(1)}°C. Heladas: ${frostHours.join(', ')}.`
+                    : `Mín: ${minTemp.toFixed(1)}°C. Riesgo de helada.`;
+            } else if (minTemp <= 2) {
+                alert.classList.add('active');
+                alert.style.borderColor = 'var(--accent-warm)';
+                alert.querySelector('.frost-alert-title').textContent = '⚠️ RIESGO HELADA';
+                alert.querySelector('.frost-alert-title').style.color = 'var(--accent-warm)';
+                alert.querySelector('.frost-alert-icon').style.color = 'var(--accent-warm)';
+                desc.textContent = `Mín: ${minTemp.toFixed(1)}°C. Condiciones propicias.`;
+            } else {
+                alert.classList.remove('active');
+            }
+        }
+
+        function toggleFrostLayer() {
+            frostLayerActive = !frostLayerActive;
+
+            if (frostLayerActive && currentWeatherData) {
+                const hourly = currentWeatherData.hourly;
+                const selectedDate = document.getElementById('datePicker').value;
+                const selected = new Date(selectedDate + 'T00:00:00');
+                const nextDay = new Date(selected);
+                nextDay.setDate(nextDay.getDate() + 1);
+
+                const offsets = [[0.005,0.005],[0.005,-0.005],[-0.005,0.005],[-0.005,-0.005],[0.008,0],[0,0.008],[-0.008,0],[0,-0.008]];
+                let frostCount = 0;
+
+                for (let i = 0; i < hourly.time.length; i++) {
+                    const hourDate = new Date(hourly.time[i]);
+                    if (hourDate >= selected && hourDate < nextDay && hourly.temperature_2m[i] <= 0) {
+                        frostCount++;
+                        const off = offsets[frostCount % offsets.length];
+                        L.circleMarker([LAT+off[0], LON+off[1]], {
+                            radius: 6, fillColor: '#ef4444', color: '#fff', weight: 1.5, opacity: 1, fillOpacity: 0.8
+                        }).addTo(map).bindPopup(`❄️ ${hourDate.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}<br>${hourly.temperature_2m[i].toFixed(1)}°C`);
+                    }
+                }
+
+                if (frostCount === 0) alert('No hay heladas para esta fecha.');
+            } else {
+                map.eachLayer(layer => { if (layer instanceof L.CircleMarker) map.removeLayer(layer); });
+                L.circle([LAT, LON], { color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.1, radius: 5000, weight: 2, dashArray: '5,10' }).addTo(map);
+                L.circle([LAT, LON], { color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.05, radius: 10000, weight: 1, dashArray: '3,7' }).addTo(map);
+            }
+        }
+
+        function getWeatherDesc(code) {
+            const codes = {
+                0:'Despejado',1:'Mayormente despejado',2:'Parcial nublado',3:'Nublado',
+                45:'Niebla',48:'Niebla escarcha',51:'Llovizna',53:'Llovizna mod',55:'Llovizna densa',
+                61:'Lluvia ligera',63:'Lluvia mod',65:'Lluvia intensa',71:'Nieve ligera',73:'Nieve mod',
+                75:'Nieve intensa',77:'Granos nieve',80:'Chubascos',81:'Chubascos mod',82:'Chubascos int',
+                85:'Chubascos nieve',86:'Chubascos nieve int',95:'Tormenta',96:'Tormenta granizo',99:'Tormenta granizo int'
+            };
+            return codes[code] || 'Desconocido';
+        }
+
+        function getWeatherIcon(code) {
+            const icons = {
+                0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',
+                61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'❄️',77:'🌨️',80:'🌦️',81:'🌧️',
+                82:'⛈️',85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'
+            };
+            return icons[code] || '☁️';
+        }
+
+        function getWindDir(deg) {
+            const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
+            return dirs[Math.round(deg/22.5)%16];
+        }
+    </script>
+</body>
+</html>
